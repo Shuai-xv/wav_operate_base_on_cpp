@@ -87,7 +87,7 @@ int main(int argc, char const *argv[])
     int cnt=0;
     int tmp;
     int i=0;
-    while(tmp=read.get_data(512,buf)){
+    while(tmp=read.get_data(400,buf)){
         // printf("i:%d,tmp=%d\n",++i,tmp);
         cnt+=tmp;
     }
