@@ -37,8 +37,9 @@ public:
     ~wav_reader();
     int get_channels();
     int get_sample_rate();
+    int get_sample_width();
     int get_frame_cnt();
-    int get_data(void*lbuf,void*rbuf,int buf_len);
+    int get_data(char*lbuf,char*rbuf,int buf_len);
 };
 
 class wav_writer:private wav_base
@@ -51,7 +52,7 @@ public:
     int set_sample_rate(int fs);
     // int set_frame_cnt(int);
     int set_sample_width(int wid);
-    int write_data(void*lbuf,void*right,int len);
+    int write_data(char*lbuf,char*right,int len);
 };
 
 

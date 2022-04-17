@@ -12,9 +12,9 @@ DEMO := demo
 
 run:$(DEMO)
 	@echo "************signal channel wav test************"
-	LD_LIBRARY_PATH=. ./$^ ./a1.wav
-	@echo "************double channels wav test************"
-	LD_LIBRARY_PATH=. ./$^ ./a2.wav
+	LD_LIBRARY_PATH=. ./$^ sig.wav echo.wav combine.wav
+	# @echo "************double channels wav test************"
+	# LD_LIBRARY_PATH=. ./$^ ./a2.wav
 
 $(OBJS):$(SRC) $(INC)
 	$(CC) -c $< -o $@
