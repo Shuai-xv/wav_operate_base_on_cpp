@@ -1,5 +1,4 @@
 .vscode
 *.o
 *.so
-*.wav
 build/*
