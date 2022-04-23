@@ -1,4 +1,5 @@
 .vscode
 *.o
 *.so
-useless.wav
+*.wav
+build/*
