@@ -38,8 +38,17 @@ public:
     int get_channels();
     int get_sample_rate();
     int get_sample_width();
-    int get_frame_cnt();
-    int get_data(char*lbuf,char*rbuf,int buf_len);
+    int get_frame_cnt();  
+    /**
+     * @description: 从wav文件中的读取数据
+     * @param {char*} lbuf 对于单通道的音频，读取的数据放入
+     *                      lbuf中，rbuf可传入NULL；对于双声道的音频，
+     *                      数据分别放入lbuf和rbuf中。
+     * @param {char*} rbuf 同上
+     * @param {int} buf_len buffer以字节为单位的长度
+     * @return {*} 返回实际读取的字节数
+     */    
+    int get_data(char* lbuf,char* rbuf,int buf_len);
 };
 
 class wav_writer:private wav_base
@@ -52,7 +61,15 @@ public:
     int set_sample_rate(int fs);
     // int set_frame_cnt(int);
     int set_sample_width(int wid);
-    int write_data(char*lbuf,char*right,int len);
+    /**
+     * @description: 向wav文件中写音频数据
+     * @param {char*} lbuf 对于单通道的音频，数据放在lbuf中传入；
+     *                      双声道的音频，数据分别放在lbuf和rbuf
+     * @param {char*} right 同上
+     * @param {int} len buffer以字节为单位的长度
+     * @return {*} 返回世界写进去的字节数
+     */    
+    int write_data(char* lbuf,char* right,int len);
 };
 
 
