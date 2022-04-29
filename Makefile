@@ -1,41 +1,43 @@
-CC=g++
-CXXFLAGS := -std=c++17 -Wall -Wextra -g
-INC := interface/wav.h
-SRC := \
-		src/wav.cpp
-SLIB := build/wav.a
-DLIB := build/wav.so
-OBJS := build/wav.o
-DEMO := build/demo
-DEMO1 := build/demo1
-OUTDIR := ./build
-TESTDAT := ./test_datas
 
-run:$(DEMO1)
-	@echo "************signal channel wav test************"
-	LD_LIBRARY_PATH=$(OUTDIR) ./$^ $(TESTDAT)/far_end.wav $(TESTDAT)/echo.wav $(TESTDAT)/mic_with_echo.wav
+INCLUDE= -I ./ -I ./interface
+CFLAGS = 
+DEFINE := 
+CC = gcc
+CXX = g++
+DIRS :=. ./src
+SRC := $(foreach dir, $(DIRS), $(wildcard $(dir)/*.c))
+SOBJS := $(patsubst %.c, %.o, $(SRC))
 
-# run:$(DEMO)
-# 	@echo "************signal channel wav test************"
-# 	LD_LIBRARY_PATH=$(OUTDIR) ./$^ $(TESTDAT)/sig.wav $(TESTDAT)/echo.wav $(TESTDAT)/combine.wav
-# 	# @echo "************double channels wav test************"
-# 	# LD_LIBRARY_PATH=$(OUTDIR) ./$^ $(TESTDAT)/a2.wav
+SRCXX := $(foreach dir, $(DIRS), $(wildcard $(dir)/*.cpp))
+SOBJSXX := $(patsubst %.cpp, %.o, $(SRCXX))
+# 头文件依赖
+DEP := $(patsubst %.o,%.o.d, $(SOBJS))
+DEP += $(patsubst %.o,%.o.d, $(SOBJSXX))
 
-build_lib:$(DLIB) $(SLIB)
-	@echo build $^
+TARGET1 = ./build/combine_wav
+TARGET2 = ./build/split_wav
 
+demo:$(TARGET1) $(TARGET2)
+	@echo "build $^ successfully"
 
-$(OBJS):$(SRC) $(INC)
-	$(CC) -c $< -o $@ -I$(dir $(INC))
+$(TARGET1):$(SOBJS) $(SOBJSXX) ./demo/combine_wav.cpp
+	$(CXX) $(INCLUDE) $^ -o $@ -lm
 
-$(SLIB):$(OBJS)
-	ar cqs $(OUTDIR)/libwav.a $^ 
+$(TARGET2):$(SOBJS) $(SOBJSXX) ./demo/split_wav.cpp
+	$(CXX) $(INCLUDE) $^ -o $@ -lm
 
-$(DLIB):$(OBJS)
-	$(CC) -shared -fPIC -o $(OUTDIR)/libwav.so $^ $(CXXFLAGS) -I$(dir $(INC))
+# 头文件依赖
+-include $(DEP)
 
-$(DEMO):./demo/demo.cpp $(DLIB)
-	$(CC) $< $(CXXFLAGS) -L$(OUTDIR) -lwav -I$(dir $(INC)) -o $@
+$(SOBJS):%.o:%.c
+	$(CC) $(DEFINE) $(CFLAGS) -c $< -o $@ -MMD -MF $@.d
 
-$(DEMO1):./demo/demo1.cpp $(DLIB)
-	$(CC) $< $(CXXFLAGS) -L$(OUTDIR) -lwav -I$(dir $(INC)) -o $@
+$(SOBJSXX):%.o:%.cpp
+	$(CXX) $(DEFINE) $(INCLUDE) -c $< -o $@ -MMD -MF $@.d
+
+clean:
+	-rm $(SOBJS)
+	-rm $(SOBJSXX)
+	-rm $(TARGET1)
+	-rm $(TARGET2)
+	-rm $(DEP)

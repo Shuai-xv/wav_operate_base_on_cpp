@@ -45,22 +45,23 @@ wav_reader::~wav_reader()
     fp=nullptr;
 }
 
-int wav_reader::get_channels()
+int wav_reader::get_channels() const
 {
     return fp?header.numChannels:-1;
 }
-int wav_reader::get_sample_rate()
+int wav_reader::get_sample_rate() const
 {
     return fp?header.sampleRate:-1;
 }
-int wav_reader::get_sample_width(){
+int wav_reader::get_sample_width() const
+{
     return fp?header.bitsPerSample:-1;
 }
-int wav_reader::get_frame_cnt()
+int wav_reader::get_frame_cnt() const
 {
     return fp?header.dataSize:-1;
 }
-int wav_reader::get_data(char*lbuf,char*rbuf,int buf_len)
+int wav_reader::get_data(char*lbuf,char*rbuf,int buf_len,func_sig_process_t cbk)
 {
     if(fp){
         char*buf;
@@ -71,27 +72,30 @@ int wav_reader::get_data(char*lbuf,char*rbuf,int buf_len)
             }
             buf=(char*)lbuf;
         }else if(header.numChannels==2){
+            buf_len*=2;
             if(lbuf==nullptr||rbuf==nullptr){
                 printf("rbuf or lbuf is null\n");
                 return -1;
             }
             buf=new char[buf_len];
         }
-        // int size=(header.bitsPerSample+7)/8;
         int cnt=fread(buf,1,(size_t)buf_len,fp);
         mem_cnt+=cnt;
-        // printf("============================================%d\n",mem_cnt);
-        // int tmp=cnt;
         if(mem_cnt>header.dataSize){
             cnt-=(mem_cnt-header.dataSize);
             mem_cnt=header.dataSize;
         }
-        if(header.numChannels==2){
+        if(header.numChannels==1){
+            if(cbk != nullptr){
+                cbk(buf,buf_len);
+            }
+        }
+        else if(header.numChannels==2){
             char*tlbuf=(char*)lbuf;
             char*trbuf=(char*)rbuf;
             char*sbuf=buf;
             int step=header.blockAlign/2;
-            for (int i = 0; i < cnt; i++)
+            for (int i = 0; i < cnt/header.blockAlign; i++)
             {
                 memcpy(tlbuf,buf,step);
                 tlbuf+=step;
@@ -101,9 +105,11 @@ int wav_reader::get_data(char*lbuf,char*rbuf,int buf_len)
                 buf+=step;
             }
             delete sbuf;
-            // printf("delete;\n");
+            if(cbk != nullptr){
+                cbk(lbuf,buf_len/2);
+                cbk(rbuf,buf_len/2);
+            }
         }
-        // printf("memcnt=%d,size=%d,cnt:%d\n",mem_cnt,size,cnt);
         return cnt;
     }
     return -1;
@@ -189,7 +195,7 @@ int wav_writer::set_sample_width(int wid){
     // header.blockAlign=wid/2;
     return 1;
 }
-int wav_writer::write_data(char*left_buf,char*right_buf,int buf_len){
+int wav_writer::write_data(char*left_buf,char*right_buf,int buf_len,func_sig_process_t cbk){
     if(fp==nullptr){
         printf("file handle is close\n");
         return -1;
@@ -214,10 +220,17 @@ int wav_writer::write_data(char*left_buf,char*right_buf,int buf_len){
     }
     if(header.numChannels==1){ 
         buf=left_buf?left_buf:right_buf;
+        if(cbk != nullptr){
+            cbk(buf,buf_len);
+        }
     }else if(header.numChannels==2){
         if(left_buf==nullptr||right_buf==nullptr){
             printf("buf is null\n");
             return -1;
+        }
+        if(cbk != nullptr){
+            cbk(left_buf,buf_len);
+            cbk(right_buf,buf_len);
         }
         buf=new char[buf_len*header.numChannels];
         char*tmp=(char*)buf;
@@ -233,7 +246,6 @@ int wav_writer::write_data(char*left_buf,char*right_buf,int buf_len){
             tmp+=step;
             rtmp+=step;
         }
-        // buf_len*=2;
     }else{
         printf("error numChannels\n");
         return -1;

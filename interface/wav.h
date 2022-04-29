@@ -2,6 +2,7 @@
 #define WAV_READER_H
 
 #include <stdio.h>
+typedef void (*func_sig_process_t)(char* buf,int len);
 /* RIFF WAVE file struct. 
  * For details see WAVE file format documentation  
  * (for example at <a href="http://www.wotsit.org)." target="_blank">http://www.wotsit.org).</a>  */  
@@ -35,10 +36,10 @@ class wav_reader:private wav_base
 public:
     wav_reader(const char* fn);
     ~wav_reader();
-    int get_channels();
-    int get_sample_rate();
-    int get_sample_width();
-    int get_frame_cnt();  
+    int get_channels() const;
+    int get_sample_rate() const;
+    int get_sample_width() const;
+    int get_frame_cnt() const;  
     /**
      * @description: 从wav文件中的读取数据
      * @param {char*} lbuf 对于单通道的音频，读取的数据放入
@@ -46,9 +47,10 @@ public:
      *                      数据分别放入lbuf和rbuf中。
      * @param {char*} rbuf 同上
      * @param {int} buf_len buffer以字节为单位的长度
+     * @param {func_sig_process_t} cbk 该回调函数可以用于读取数据时做一些数据处理工作，不用时可传入nullptr
      * @return {*} 返回实际读取的字节数
-     */    
-    int get_data(char* lbuf,char* rbuf,int buf_len);
+     */
+    int get_data(char* lbuf,char* rbuf,int buf_len,func_sig_process_t cbk=nullptr);
 };
 
 class wav_writer:private wav_base
@@ -65,11 +67,12 @@ public:
      * @description: 向wav文件中写音频数据
      * @param {char*} lbuf 对于单通道的音频，数据放在lbuf中传入；
      *                      双声道的音频，数据分别放在lbuf和rbuf
-     * @param {char*} right 同上
+     * @param {char*} rbuf 同上
      * @param {int} len buffer以字节为单位的长度
-     * @return {*} 返回世界写进去的字节数
-     */    
-    int write_data(char* lbuf,char* right,int len);
+     * @param {func_sig_process_t} cbk 该回调函数可以用于数据写入文件之前做一些数据处理工作，不用时可传入nullptr
+     * @return {*} 返回实际写进去的字节数
+     */
+    int write_data(char* lbuf,char* rbuf,int len,func_sig_process_t cbk=nullptr);
 };
 
 
